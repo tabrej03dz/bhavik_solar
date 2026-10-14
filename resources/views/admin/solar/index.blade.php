@@ -1,0 +1,9 @@
+@extends('layouts.admin')
+@section('title', ucfirst($type))
+@section('page-title', ucfirst($type))
+@section('content')
+<div class="rounded-2xl bg-white p-6 shadow-sm"><div class="mb-6 flex flex-wrap items-center justify-between gap-4"><h2 class="text-2xl font-bold">Manage {{ ucfirst($type) }}</h2><a class="rounded-xl bg-brand-700 px-5 py-3 font-bold text-white" href="{{ route('admin.'.$type.'.create') }}">+ Add {{ ucfirst(rtrim($type,'s')) }}</a></div>
+@if(session('success'))<p class="mb-4 rounded-xl bg-green-50 p-3 text-green-800">{{ session('success') }}</p>@endif
+<form class="mb-5 flex gap-3" method="GET"><input name="search" value="{{ request('search') }}" placeholder="Search {{ $type }}" class="w-full max-w-lg rounded-lg border p-3"><button class="rounded-lg bg-slate-800 px-5 text-white">Search</button></form>
+<div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr class="border-b bg-slate-50"><th class="p-3">Image</th><th class="p-3">Title</th><th class="p-3">Status</th><th class="p-3">Order</th><th class="p-3">Actions</th></tr></thead><tbody>@forelse($items as $item)<tr class="border-b"><td class="p-3">@if($item->image)<img class="h-14 w-20 rounded object-cover" src="{{ asset('storage/'.$item->image) }}">@else — @endif</td><td class="p-3 font-semibold">{{ $item->title }}</td><td class="p-3">{{ $item->is_active ? 'Active':'Hidden' }}</td><td class="p-3">{{ $item->sort_order }}</td><td class="p-3"><div class="flex gap-3"><a class="font-bold text-brand-700" href="{{ route('admin.'.$type.'.edit',$item->id) }}">Edit</a><form method="POST" action="{{ route('admin.'.$type.'.destroy',$item->id) }}" onsubmit="return confirm('Delete this item?')">@csrf @method('DELETE')<button class="text-red-600">Delete</button></form></div></td></tr>@empty<tr><td colspan="5" class="p-6 text-center">No records yet</td></tr>@endforelse</tbody></table></div><div class="mt-6">{{ $items->links() }}</div></div>
+@endsection

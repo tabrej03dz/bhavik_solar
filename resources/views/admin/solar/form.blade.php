@@ -1,0 +1,16 @@
+@extends('layouts.admin')
+@section('title', ($item->exists?'Edit ':'Add ').ucfirst($type))
+@section('page-title', ($item->exists?'Edit ':'Add ').ucfirst($type))
+@section('content')
+<div class="max-w-4xl rounded-2xl bg-white p-6 shadow-sm"><h2 class="mb-6 text-2xl font-bold">{{ $item->exists?'Edit':'Add' }} {{ ucfirst(rtrim($type,'s')) }}</h2>
+@if($errors->any())<div class="mb-5 rounded-xl bg-red-50 p-4 text-red-700"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+<form method="POST" enctype="multipart/form-data" action="{{ $item->exists ? route('admin.'.$type.'.update',$item->id) : route('admin.'.$type.'.store') }}" class="grid gap-5 md:grid-cols-2">@csrf @if($item->exists) @method('PUT') @endif
+<div class="md:col-span-2"><label class="font-semibold">Title *</label><input class="mt-2 w-full rounded-lg border p-3" name="title" required value="{{ old('title',$item->title) }}"></div>
+<div class="md:col-span-2"><label class="font-semibold">Short Description</label><input class="mt-2 w-full rounded-lg border p-3" name="short_description" value="{{ old('short_description',$item->short_description) }}"></div>
+<div class="md:col-span-2"><label class="font-semibold">Full Description</label><textarea class="mt-2 w-full rounded-lg border p-3" rows="6" name="description">{{ old('description',$item->description) }}</textarea></div>
+@if($type==='projects')<div><label class="font-semibold">Location</label><input class="mt-2 w-full rounded-lg border p-3" name="location" value="{{ old('location',$item->location) }}"></div><div><label class="font-semibold">Capacity (e.g. 50 kW)</label><input class="mt-2 w-full rounded-lg border p-3" name="capacity" value="{{ old('capacity',$item->capacity) }}"></div><div><label class="font-semibold">Completion Date</label><input class="mt-2 w-full rounded-lg border p-3" type="date" name="completed_at" value="{{ old('completed_at',$item->completed_at?->format('Y-m-d')) }}"></div>@endif
+<div><label class="font-semibold">Display Order</label><input class="mt-2 w-full rounded-lg border p-3" type="number" min="0" name="sort_order" value="{{ old('sort_order',$item->sort_order ?? 0) }}"></div>
+<div><label class="font-semibold">Image (JPG/PNG/WebP, max 5MB)</label><input type="file" name="image" accept="image/*" class="mt-2 w-full rounded-lg border p-3">@if($item->image)<img class="mt-3 h-28 rounded-lg object-cover" src="{{ asset('storage/'.$item->image) }}"><label class="mt-2 flex gap-2"><input type="checkbox" name="remove_image" value="1"> Remove image</label>@endif</div>
+<div class="flex gap-8"><label class="flex items-center gap-2"><input type="checkbox" name="is_active" value="1" {{ old('is_active',$item->exists?$item->is_active:true)?'checked':'' }}> Active</label><label class="flex items-center gap-2"><input type="checkbox" name="is_featured" value="1" {{ old('is_featured',$item->is_featured)?'checked':'' }}> Featured</label></div>
+<div class="md:col-span-2 flex gap-3"><button class="rounded-xl bg-brand-700 px-6 py-3 font-bold text-white">Save {{ ucfirst(rtrim($type,'s')) }}</button><a href="{{ route('admin.'.$type.'.index') }}" class="rounded-xl border px-6 py-3">Cancel</a></div></form></div>
+@endsection
