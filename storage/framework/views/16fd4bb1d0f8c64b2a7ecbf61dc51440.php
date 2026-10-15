@@ -314,6 +314,44 @@
 
 
             <div class="mb-2 mt-7 px-3 text-[10px] font-bold uppercase tracking-[.18em] text-slate-400">Website Management</div>
+
+
+            
+
+            <a
+                href="<?php echo e(route('admin.enquiries.index')); ?>"
+                class="
+                    mb-1.5 flex items-center justify-between
+                    rounded-xl px-3.5 py-3 text-sm
+                    font-semibold transition
+
+                    <?php echo e(request()->routeIs('admin.enquiries.*')
+                        ? 'bg-brand-50 text-brand-800'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'); ?>
+
+                "
+            >
+
+                <span class="flex items-center gap-3">
+
+                    <svg
+                        class="h-5 w-5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                    >
+                        <path d="M6 2h9l5 5v15H6z"/>
+                        <path d="M14 2v6h6"/>
+                        <path d="M9 13h8M9 17h6"/>
+                    </svg>
+
+                    Enquiries
+
+                </span>
+
+            </a>
+
             <?php $__currentLoopData = ['services'=>'Solar Services','projects'=>'Solar Projects']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $resource=>$label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <a href="<?php echo e(route('admin.'.$resource.'.index')); ?>" class="mb-1.5 flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold <?php echo e(request()->routeIs('admin.'.$resource.'.*') ? 'bg-brand-50 text-brand-800' : 'text-slate-600 hover:bg-slate-50'); ?>"><span>☀</span><span><?php echo e($label); ?></span></a>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>

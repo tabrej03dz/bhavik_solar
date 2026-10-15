@@ -312,6 +312,44 @@
 
 
             <div class="mb-2 mt-7 px-3 text-[10px] font-bold uppercase tracking-[.18em] text-slate-400">Website Management</div>
+
+
+            {{-- Enquiries --}}
+
+            <a
+                href="{{ route('admin.enquiries.index') }}"
+                class="
+                    mb-1.5 flex items-center justify-between
+                    rounded-xl px-3.5 py-3 text-sm
+                    font-semibold transition
+
+                    {{ request()->routeIs('admin.enquiries.*')
+                        ? 'bg-brand-50 text-brand-800'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+                    }}
+                "
+            >
+
+                <span class="flex items-center gap-3">
+
+                    <svg
+                        class="h-5 w-5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                    >
+                        <path d="M6 2h9l5 5v15H6z"/>
+                        <path d="M14 2v6h6"/>
+                        <path d="M9 13h8M9 17h6"/>
+                    </svg>
+
+                    Enquiries
+
+                </span>
+
+            </a>
+
             @foreach(['services'=>'Solar Services','projects'=>'Solar Projects'] as $resource=>$label)
             <a href="{{ route('admin.'.$resource.'.index') }}" class="mb-1.5 flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold {{ request()->routeIs('admin.'.$resource.'.*') ? 'bg-brand-50 text-brand-800' : 'text-slate-600 hover:bg-slate-50' }}"><span>☀</span><span>{{ $label }}</span></a>
             @endforeach

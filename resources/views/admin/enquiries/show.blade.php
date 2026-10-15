@@ -1,4 +1,7 @@
-@extends('layouts.website')
+@extends('layouts.admin')
+
+@section('title', 'Enquiries Management')
+@section('page-title', 'Enquiries Management')
 @section('title', 'Enquiry #'.$enquiry->id)
 @section('content')
 <div class="min-h-screen bg-slate-50 px-4 py-10"><div class="mx-auto max-w-4xl">
