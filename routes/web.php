@@ -228,13 +228,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/contact/enquiry', [SolarEnquiryController::class, 'store'])
     ->middleware('throttle:10,1')->name('contact.enquiry.store');
 
-Route::prefix('enquiries')->name('admin.enquiries.')->group(function () {
-    Route::get('/', [SolarEnquiryController::class, 'index'])->name('index');
-    Route::get('/export', [SolarEnquiryController::class, 'export'])->name('export');
-    Route::get('/{enquiry}', [SolarEnquiryController::class, 'show'])->name('show');
-    Route::put('/{enquiry}', [SolarEnquiryController::class, 'update'])->name('update');
-    Route::delete('/{enquiry}', [SolarEnquiryController::class, 'destroy'])->name('destroy');
-});
+    Route::prefix('enquiries')->name('admin.enquiries.')->group(function () {
+        Route::get('/', [SolarEnquiryController::class, 'index'])->name('index');
+        Route::get('/export', [SolarEnquiryController::class, 'export'])->name('export');
+        Route::get('/{enquiry}', [SolarEnquiryController::class, 'show'])->name('show');
+        Route::put('/{enquiry}', [SolarEnquiryController::class, 'update'])->name('update');
+        Route::delete('/{enquiry}', [SolarEnquiryController::class, 'destroy'])->name('destroy');
+    });
 
     /*
     |--------------------------------------------------------------------------
@@ -247,4 +247,65 @@ Route::prefix('enquiries')->name('admin.enquiries.')->group(function () {
         [AuthenticatedSessionController::class, 'destroy']
     )->name('logout');
 
+
+    
+
 });
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Bhavik Solar - Public Detail Pages
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/solar-product/{product}',
+    [\App\Http\Controllers\SolarDetailController::class, 'product']
+)->name('solar.product.show');
+
+Route::get(
+    '/service/{slug}',
+    [\App\Http\Controllers\SolarDetailController::class, 'service']
+)->name('solar.service.show');
+
+Route::get(
+    '/project/{slug}',
+    [\App\Http\Controllers\SolarDetailController::class, 'project']
+)->name('solar.project.show');
+
+
+/*
+|--------------------------------------------------------------------------
+| Bhavik Solar - Admin Media Management
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')
+    ->prefix('dashboard/manage/media')
+    ->name('admin.media.')
+    ->group(function () {
+
+        Route::get(
+            '/{type}/{id}',
+            [\App\Http\Controllers\AdminMediaController::class, 'index']
+        )->where('type', 'product|project')
+         ->whereNumber('id')
+         ->name('index');
+
+        Route::post(
+            '/{type}/{id}',
+            [\App\Http\Controllers\AdminMediaController::class, 'store']
+        )->where('type', 'product|project')
+         ->whereNumber('id')
+         ->name('store');
+
+        Route::delete(
+            '/{type}/{id}/{media}',
+            [\App\Http\Controllers\AdminMediaController::class, 'destroy']
+        )->where('type', 'product|project')
+         ->whereNumber('id')
+         ->name('destroy');
+
+    });

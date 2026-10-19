@@ -67,7 +67,7 @@
                 @foreach($managedServices as $service)
 
                     <article
-                        class="group flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-900/10"
+                        class="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-900/10"
                     >
 
                         {{-- SERVICE IMAGE --}}
@@ -95,6 +95,7 @@
                                 </div>
 
                             @endif
+
 
                             @if($service->is_featured)
 
@@ -132,11 +133,12 @@
                             </h3>
 
 
+                            {{-- SHORT DESCRIPTION --}}
                             @if($service->short_description)
 
                                 <p class="leading-7 text-slate-600">
 
-                                    {{ $service->short_description }}
+                                    {{ \Illuminate\Support\Str::limit($service->short_description, 160) }}
 
                                 </p>
 
@@ -151,7 +153,7 @@
                             @endif
 
 
-                            {{-- FULL DESCRIPTION --}}
+                            {{-- READ MORE EXPANDABLE DESCRIPTION --}}
                             @if($service->description)
 
                                 <div class="mt-4">
@@ -177,19 +179,39 @@
                             @endif
 
 
-                            {{-- ENQUIRY BUTTON --}}
+                            {{-- DETAILS AND ENQUIRY BUTTONS --}}
                             <div class="mt-auto pt-7">
 
-                                <a
-                                    href="{{ route('contact', ['service' => $service->title]) }}"
-                                    class="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-extrabold text-white transition hover:bg-emerald-900"
-                                >
+                                <div class="mb-5 h-px w-full bg-slate-100"></div>
 
-                                    Enquire Now
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
-                                    <i data-lucide="arrow-up-right" class="h-4 w-4"></i>
+                                    {{-- VIEW DETAILS --}}
+                                    <a
+                                        href="{{ route('solar.service.show', $service->slug) }}"
+                                        class="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 bg-white px-4 py-3 text-sm font-extrabold text-emerald-700 transition duration-300 hover:bg-emerald-50"
+                                    >
 
-                                </a>
+                                        <i data-lucide="eye" class="h-4 w-4"></i>
+
+                                        View Details
+
+                                    </a>
+
+
+                                    {{-- ENQUIRE NOW --}}
+                                    <a
+                                        href="{{ route('contact', ['service' => $service->title]) }}"
+                                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-extrabold text-white transition duration-300 hover:bg-emerald-900"
+                                    >
+
+                                        Enquire Now
+
+                                        <i data-lucide="arrow-up-right" class="h-4 w-4"></i>
+
+                                    </a>
+
+                                </div>
 
                             </div>
 
@@ -396,7 +418,7 @@
 
             <a
                 href="{{ route('contact') }}"
-                class="inline-flex items-center gap-2 rounded-full bg-lime-400 px-6 py-3.5 text-sm font-bold text-slate-950 hover:bg-lime-300"
+                class="inline-flex items-center justify-center gap-2 rounded-full bg-lime-400 px-6 py-3.5 text-sm font-bold text-slate-950 hover:bg-lime-300"
             >
                 Get a Free Consultation
                 <i data-lucide="arrow-up-right" class="h-4 w-4"></i>
@@ -404,7 +426,7 @@
 
             <a
                 href="tel:+918093870837"
-                class="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-bold text-white hover:bg-white/20"
+                class="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-bold text-white hover:bg-white/20"
             >
                 Call 8093870837
                 <i data-lucide="phone" class="h-4 w-4"></i>

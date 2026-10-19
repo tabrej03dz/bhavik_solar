@@ -16,9 +16,7 @@
         <a href="{{ url("/contact") }}" class="hover:text-lime-300 transition" data-nav="{{ url("/contact") }}">Contact</a>
     </nav>
     <div class="hidden md:flex items-center gap-3">
-        <a href="{{ url("/login") }}" aria-label="Login to Bhavik Solar" class="rounded-full border border-white/20 p-3 hover:bg-white/10">
-            Login
-        </a>
+        
         <a href="tel:+918093870837" aria-label="Call Bhavik Solar" class="rounded-full border border-white/20 p-3 hover:bg-white/10">
             <i data-lucide="phone" class="w-4 h-4"></i>
         </a>

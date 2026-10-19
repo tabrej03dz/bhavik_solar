@@ -409,6 +409,11 @@
 
                                 </a>
 
+                                <a href="{{ route('solar.product.show', $product->slug) }}"
+                                class="inline-flex rounded-xl bg-emerald-700 px-5 py-3 font-bold text-white">
+                                    Details →
+                                </a>
+
 
                                 <a
                                     href="{{ $whatsappUrl }}"
