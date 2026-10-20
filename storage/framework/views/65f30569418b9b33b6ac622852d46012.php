@@ -1,16 +1,803 @@
-<?php $__env->startSection('title', ($item->exists?'Edit ':'Add ').ucfirst($type)); ?>
-<?php $__env->startSection('page-title', ($item->exists?'Edit ':'Add ').ucfirst($type)); ?>
+<?php $__env->startSection('title', ($item->exists ? 'Edit ' : 'Add ') . ucfirst(rtrim($type, 's'))); ?>
+
+<?php $__env->startSection('page-title', ($item->exists ? 'Edit ' : 'Add ') . ucfirst(rtrim($type, 's'))); ?>
+
 <?php $__env->startSection('content'); ?>
-<div class="max-w-4xl rounded-2xl bg-white p-6 shadow-sm"><h2 class="mb-6 text-2xl font-bold"><?php echo e($item->exists?'Edit':'Add'); ?> <?php echo e(ucfirst(rtrim($type,'s'))); ?></h2>
-<?php if($errors->any()): ?><div class="mb-5 rounded-xl bg-red-50 p-4 text-red-700"><ul><?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><li><?php echo e($error); ?></li><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></ul></div><?php endif; ?>
-<form method="POST" enctype="multipart/form-data" action="<?php echo e($item->exists ? route('admin.'.$type.'.update',$item->id) : route('admin.'.$type.'.store')); ?>" class="grid gap-5 md:grid-cols-2"><?php echo csrf_field(); ?> <?php if($item->exists): ?> <?php echo method_field('PUT'); ?> <?php endif; ?>
-<div class="md:col-span-2"><label class="font-semibold">Title *</label><input class="mt-2 w-full rounded-lg border p-3" name="title" required value="<?php echo e(old('title',$item->title)); ?>"></div>
-<div class="md:col-span-2"><label class="font-semibold">Short Description</label><input class="mt-2 w-full rounded-lg border p-3" name="short_description" value="<?php echo e(old('short_description',$item->short_description)); ?>"></div>
-<div class="md:col-span-2"><label class="font-semibold">Full Description</label><textarea class="mt-2 w-full rounded-lg border p-3" rows="6" name="description"><?php echo e(old('description',$item->description)); ?></textarea></div>
-<?php if($type==='projects'): ?><div><label class="font-semibold">Location</label><input class="mt-2 w-full rounded-lg border p-3" name="location" value="<?php echo e(old('location',$item->location)); ?>"></div><div><label class="font-semibold">Capacity (e.g. 50 kW)</label><input class="mt-2 w-full rounded-lg border p-3" name="capacity" value="<?php echo e(old('capacity',$item->capacity)); ?>"></div><div><label class="font-semibold">Completion Date</label><input class="mt-2 w-full rounded-lg border p-3" type="date" name="completed_at" value="<?php echo e(old('completed_at',$item->completed_at?->format('Y-m-d'))); ?>"></div><?php endif; ?>
-<div><label class="font-semibold">Display Order</label><input class="mt-2 w-full rounded-lg border p-3" type="number" min="0" name="sort_order" value="<?php echo e(old('sort_order',$item->sort_order ?? 0)); ?>"></div>
-<div><label class="font-semibold">Image (JPG/PNG/WebP, max 5MB)</label><input type="file" name="image" accept="image/*" class="mt-2 w-full rounded-lg border p-3"><?php if($item->image): ?><img class="mt-3 h-28 rounded-lg object-cover" src="<?php echo e(asset('storage/'.$item->image)); ?>"><label class="mt-2 flex gap-2"><input type="checkbox" name="remove_image" value="1"> Remove image</label><?php endif; ?></div>
-<div class="flex gap-8"><label class="flex items-center gap-2"><input type="checkbox" name="is_active" value="1" <?php echo e(old('is_active',$item->exists?$item->is_active:true)?'checked':''); ?>> Active</label><label class="flex items-center gap-2"><input type="checkbox" name="is_featured" value="1" <?php echo e(old('is_featured',$item->is_featured)?'checked':''); ?>> Featured</label></div>
-<div class="md:col-span-2 flex gap-3"><button class="rounded-xl bg-brand-700 px-6 py-3 font-bold text-white">Save <?php echo e(ucfirst(rtrim($type,'s'))); ?></button><a href="<?php echo e(route('admin.'.$type.'.index')); ?>" class="rounded-xl border px-6 py-3">Cancel</a></div></form></div>
+
+<?php
+    $isProject = $type === 'projects';
+
+    $formAction = $item->exists
+        ? route('admin.' . $type . '.update', $item->id)
+        : route('admin.' . $type . '.store');
+
+    $mediaItems = $isProject && $item->exists
+        ? $item->media
+        : collect();
+
+    $galleryImages = $mediaItems->where('type', 'image');
+    $galleryVideos = $mediaItems->where('type', 'video');
+?>
+
+<div class="mx-auto max-w-6xl space-y-6">
+
+    
+    <div class="flex flex-wrap items-center justify-between gap-4">
+
+        <div>
+            <h1 class="text-2xl font-black text-slate-900 md:text-3xl">
+                <?php echo e($item->exists ? 'Edit' : 'Add New'); ?>
+
+                <?php echo e(ucfirst(rtrim($type, 's'))); ?>
+
+            </h1>
+
+            <p class="mt-2 text-sm text-slate-500">
+                Manage information, images and videos.
+            </p>
+        </div>
+
+        <a
+            href="<?php echo e(route('admin.' . $type . '.index')); ?>"
+            class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"
+        >
+            ← Back to List
+        </a>
+
+    </div>
+
+
+    
+    <?php if(session('success')): ?>
+
+        <div class="rounded-xl border border-green-200 bg-green-50 p-4 font-semibold text-green-700">
+            <?php echo e(session('success')); ?>
+
+        </div>
+
+    <?php endif; ?>
+
+
+    
+    <?php if($errors->any()): ?>
+
+        <div class="rounded-xl border border-red-200 bg-red-50 p-5 text-red-700">
+
+            <h3 class="mb-3 font-bold">
+                Please fix the following errors:
+            </h3>
+
+            <ul class="list-inside list-disc space-y-1 text-sm">
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li><?php echo e($error); ?></li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </ul>
+
+        </div>
+
+    <?php endif; ?>
+
+
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+        action="<?php echo e($formAction); ?>"
+        id="solarItemForm"
+        class="space-y-6"
+    >
+
+        <?php echo csrf_field(); ?>
+
+        <?php if($item->exists): ?>
+            <?php echo method_field('PUT'); ?>
+        <?php endif; ?>
+
+
+        
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+
+            <h2 class="mb-6 text-xl font-extrabold text-slate-900">
+                Basic Information
+            </h2>
+
+            <div class="grid gap-6 md:grid-cols-2">
+
+                
+                <div class="md:col-span-2">
+
+                    <label class="mb-2 block text-sm font-bold text-slate-700">
+                        Title <span class="text-red-500">*</span>
+                    </label>
+
+                    <input
+                        type="text"
+                        name="title"
+                        required
+                        maxlength="255"
+                        value="<?php echo e(old('title', $item->title)); ?>"
+                        placeholder="Enter title"
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                    >
+
+                </div>
+
+
+                
+                <div class="md:col-span-2">
+
+                    <label class="mb-2 block text-sm font-bold text-slate-700">
+                        Short Description
+                    </label>
+
+                    <textarea
+                        name="short_description"
+                        rows="3"
+                        maxlength="500"
+                        placeholder="Enter short description"
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                    ><?php echo e(old('short_description', $item->short_description)); ?></textarea>
+
+                </div>
+
+
+                
+                <div class="md:col-span-2">
+
+                    <label class="mb-2 block text-sm font-bold text-slate-700">
+                        Full Description
+                    </label>
+
+                    <textarea
+                        name="description"
+                        rows="7"
+                        placeholder="Enter full description"
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                    ><?php echo e(old('description', $item->description)); ?></textarea>
+
+                </div>
+
+
+                
+                <?php if($isProject): ?>
+
+                    <div>
+
+                        <label class="mb-2 block text-sm font-bold text-slate-700">
+                            Project Location
+                        </label>
+
+                        <input
+                            type="text"
+                            name="location"
+                            value="<?php echo e(old('location', $item->location)); ?>"
+                            placeholder="Jharsuguda, Odisha"
+                            class="w-full rounded-xl border border-slate-200 px-4 py-3"
+                        >
+
+                    </div>
+
+
+                    <div>
+
+                        <label class="mb-2 block text-sm font-bold text-slate-700">
+                            Capacity
+                        </label>
+
+                        <input
+                            type="text"
+                            name="capacity"
+                            value="<?php echo e(old('capacity', $item->capacity)); ?>"
+                            placeholder="e.g. 50 kW"
+                            class="w-full rounded-xl border border-slate-200 px-4 py-3"
+                        >
+
+                    </div>
+
+
+                    <div>
+
+                        <label class="mb-2 block text-sm font-bold text-slate-700">
+                            Completion Date
+                        </label>
+
+                        <input
+                            type="date"
+                            name="completed_at"
+                            value="<?php echo e(old('completed_at', $item->completed_at?->format('Y-m-d'))); ?>"
+                            class="w-full rounded-xl border border-slate-200 px-4 py-3"
+                        >
+
+                    </div>
+
+                <?php endif; ?>
+
+
+                
+                <div>
+
+                    <label class="mb-2 block text-sm font-bold text-slate-700">
+                        Display Order
+                    </label>
+
+                    <input
+                        type="number"
+                        min="0"
+                        name="sort_order"
+                        value="<?php echo e(old('sort_order', $item->sort_order ?? 0)); ?>"
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3"
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+
+            <h2 class="mb-2 text-xl font-extrabold text-slate-900">
+                Main / Featured Image
+            </h2>
+
+            <p class="mb-6 text-sm text-slate-500">
+                This image is used as the main thumbnail in listing cards.
+            </p>
+
+
+            <input
+                type="file"
+                name="image"
+                id="mainImageInput"
+                accept=".jpg,.jpeg,.png,.webp"
+                class="w-full rounded-xl border border-dashed border-slate-300 p-4"
+            >
+
+            <p class="mt-2 text-xs text-slate-500">
+                JPG, JPEG, PNG, WebP. Maximum 5 MB.
+            </p>
+
+
+            <div id="mainImagePreview" class="mt-5 hidden">
+
+                <img
+                    id="mainImagePreviewImg"
+                    src=""
+                    alt="Image preview"
+                    class="h-48 max-w-full rounded-xl border object-contain"
+                >
+
+            </div>
+
+
+            <?php if($item->exists && $item->image): ?>
+
+                <div class="mt-6">
+
+                    <p class="mb-3 text-sm font-bold text-slate-700">
+                        Current Main Image
+                    </p>
+
+                    <img
+                        src="<?php echo e(asset('storage/' . $item->image)); ?>"
+                        alt="Current image"
+                        class="h-44 max-w-full rounded-xl border object-contain"
+                    >
+
+                    <label class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-red-600">
+
+                        <input
+                            type="checkbox"
+                            name="remove_image"
+                            value="1"
+                            class="h-4 w-4 rounded"
+                        >
+
+                        Remove Current Main Image
+
+                    </label>
+
+                </div>
+
+            <?php endif; ?>
+
+        </div>
+
+
+        
+        <?php if($isProject): ?>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+
+                <div class="mb-6 flex items-center gap-3">
+
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                        <i data-lucide="images" class="h-6 w-6"></i>
+                    </div>
+
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900">
+                            Project Gallery Images
+                        </h2>
+
+                        <p class="text-sm text-slate-500">
+                            Upload multiple installation photographs.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <label
+                    for="galleryImages"
+                    class="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 px-6 py-10 text-center transition hover:border-emerald-500 hover:bg-emerald-50"
+                >
+
+                    <i data-lucide="image-plus" class="mb-4 h-10 w-10 text-emerald-600"></i>
+
+                    <span class="font-bold text-emerald-800">
+                        Click to Select Multiple Images
+                    </span>
+
+                    <span class="mt-2 text-xs text-slate-500">
+                        Up to 20 images • Maximum 10 MB each
+                    </span>
+
+                </label>
+
+
+                <input
+                    type="file"
+                    name="images[]"
+                    id="galleryImages"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    multiple
+                    class="sr-only"
+                >
+
+
+                <div
+                    id="galleryImagePreview"
+                    class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
+                ></div>
+
+
+                
+                <?php if($item->exists && $galleryImages->isNotEmpty()): ?>
+
+                    <div class="mt-8 border-t border-slate-100 pt-7">
+
+                        <h3 class="mb-5 text-lg font-extrabold text-slate-900">
+                            Existing Gallery Images
+                            (<?php echo e($galleryImages->count()); ?>)
+                        </h3>
+
+                        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+
+                            <?php $__currentLoopData = $galleryImages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $media): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+
+                                <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+
+                                    <img
+                                        src="<?php echo e($media->url); ?>"
+                                        alt="<?php echo e($media->alt_text ?: $item->title); ?>"
+                                        loading="lazy"
+                                        class="h-36 w-full object-cover"
+                                    >
+
+                                    <div class="p-3">
+
+                                        <label class="flex items-center gap-2 text-xs font-bold text-red-600">
+
+                                            <input
+                                                type="checkbox"
+                                                name="delete_media[]"
+                                                value="<?php echo e($media->id); ?>"
+                                                class="h-4 w-4"
+                                            >
+
+                                            Delete on Save
+
+                                        </label>
+
+                                    </div>
+
+                                </div>
+
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+                        </div>
+
+                    </div>
+
+                <?php endif; ?>
+
+            </div>
+
+
+            
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+
+                <div class="mb-6 flex items-center gap-3">
+
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                        <i data-lucide="video" class="h-6 w-6"></i>
+                    </div>
+
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900">
+                            Project Videos
+                        </h2>
+
+                        <p class="text-sm text-slate-500">
+                            Upload multiple project or installation videos.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <label
+                    for="galleryVideos"
+                    class="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 px-6 py-10 text-center transition hover:border-blue-500 hover:bg-blue-50"
+                >
+
+                    <i data-lucide="video" class="mb-4 h-10 w-10 text-blue-600"></i>
+
+                    <span class="font-bold text-blue-800">
+                        Click to Select Multiple Videos
+                    </span>
+
+                    <span class="mt-2 text-xs text-slate-500">
+                        MP4, MOV, WebM • Up to 10 videos • 50 MB each
+                    </span>
+
+                </label>
+
+
+                <input
+                    type="file"
+                    name="videos[]"
+                    id="galleryVideos"
+                    accept=".mp4,.mov,.webm"
+                    multiple
+                    class="sr-only"
+                >
+
+
+                <div
+                    id="galleryVideoPreview"
+                    class="mt-6 grid gap-4 sm:grid-cols-2"
+                ></div>
+
+
+                
+                <?php if($item->exists && $galleryVideos->isNotEmpty()): ?>
+
+                    <div class="mt-8 border-t border-slate-100 pt-7">
+
+                        <h3 class="mb-5 text-lg font-extrabold text-slate-900">
+                            Existing Videos
+                            (<?php echo e($galleryVideos->count()); ?>)
+                        </h3>
+
+                        <div class="grid gap-5 sm:grid-cols-2">
+
+                            <?php $__currentLoopData = $galleryVideos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $media): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+
+                                <div class="overflow-hidden rounded-xl border border-slate-200">
+
+                                    <video
+                                        controls
+                                        preload="metadata"
+                                        playsinline
+                                        class="aspect-video w-full bg-black object-contain"
+                                    >
+                                        <source src="<?php echo e($media->url); ?>">
+                                        Your browser does not support video.
+                                    </video>
+
+
+                                    <div class="p-4">
+
+                                        <p class="mb-3 truncate text-xs text-slate-500">
+                                            <?php echo e($media->original_name); ?>
+
+                                        </p>
+
+                                        <label class="flex items-center gap-2 text-sm font-bold text-red-600">
+
+                                            <input
+                                                type="checkbox"
+                                                name="delete_media[]"
+                                                value="<?php echo e($media->id); ?>"
+                                                class="h-4 w-4"
+                                            >
+
+                                            Delete on Save
+
+                                        </label>
+
+                                    </div>
+
+                                </div>
+
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+                        </div>
+
+                    </div>
+
+                <?php endif; ?>
+
+            </div>
+
+        <?php endif; ?>
+
+
+        
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+            <h2 class="mb-5 text-lg font-extrabold text-slate-900">
+                Publishing Settings
+            </h2>
+
+            <div class="flex flex-wrap gap-8">
+
+                <label class="inline-flex cursor-pointer items-center gap-3 font-semibold text-slate-700">
+
+                    <input
+                        type="checkbox"
+                        name="is_active"
+                        value="1"
+                        class="h-5 w-5 rounded"
+                        <?php echo e(old('is_active', $item->exists ? $item->is_active : true) ? 'checked' : ''); ?>
+
+                    >
+
+                    Active / Published
+
+                </label>
+
+
+                <label class="inline-flex cursor-pointer items-center gap-3 font-semibold text-slate-700">
+
+                    <input
+                        type="checkbox"
+                        name="is_featured"
+                        value="1"
+                        class="h-5 w-5 rounded"
+                        <?php echo e(old('is_featured', $item->is_featured) ? 'checked' : ''); ?>
+
+                    >
+
+                    Featured
+
+                </label>
+
+            </div>
+
+        </div>
+
+
+        
+        <div class="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+            <button
+                type="submit"
+                id="solarSubmitButton"
+                class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-8 py-3.5 font-extrabold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+
+                <i data-lucide="save" class="h-5 w-5"></i>
+
+                <span id="solarSubmitText">
+                    <?php echo e($item->exists ? 'Update' : 'Save'); ?>
+
+                    <?php echo e(ucfirst(rtrim($type, 's'))); ?>
+
+                </span>
+
+            </button>
+
+
+            <a
+                href="<?php echo e(route('admin.' . $type . '.index')); ?>"
+                class="rounded-xl border border-slate-200 bg-white px-8 py-3.5 font-bold text-slate-700 hover:bg-slate-50"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
 <?php $__env->stopSection(); ?>
+
+
+<?php $__env->startPush('scripts'); ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const previewUrls = {
+        main: [],
+        images: [],
+        videos: []
+    };
+
+    function clearPreview(type, container) {
+
+        previewUrls[type].forEach(function (url) {
+            URL.revokeObjectURL(url);
+        });
+
+        previewUrls[type] = [];
+
+        if (container) {
+            container.innerHTML = '';
+        }
+    }
+
+
+    // MAIN IMAGE PREVIEW
+    const mainInput = document.getElementById('mainImageInput');
+    const mainWrapper = document.getElementById('mainImagePreview');
+    const mainPreview = document.getElementById('mainImagePreviewImg');
+
+    if (mainInput && mainPreview && mainWrapper) {
+
+        mainInput.addEventListener('change', function () {
+
+            previewUrls.main.forEach(function (url) {
+                URL.revokeObjectURL(url);
+            });
+
+            previewUrls.main = [];
+
+            const file = this.files[0];
+
+            if (!file) {
+                mainWrapper.classList.add('hidden');
+                return;
+            }
+
+            const url = URL.createObjectURL(file);
+            previewUrls.main.push(url);
+
+            mainPreview.src = url;
+            mainWrapper.classList.remove('hidden');
+
+        });
+
+    }
+
+
+    // MULTIPLE IMAGE PREVIEW
+    const imagesInput = document.getElementById('galleryImages');
+    const imagesContainer = document.getElementById('galleryImagePreview');
+
+    if (imagesInput && imagesContainer) {
+
+        imagesInput.addEventListener('change', function () {
+
+            clearPreview('images', imagesContainer);
+
+            const files = Array.from(this.files);
+
+            if (files.length > 20) {
+                alert('Maximum 20 images allowed.');
+                this.value = '';
+                return;
+            }
+
+            files.forEach(function (file) {
+
+                const url = URL.createObjectURL(file);
+                previewUrls.images.push(url);
+
+                const wrapper = document.createElement('div');
+                wrapper.className =
+                    'overflow-hidden rounded-xl border border-slate-200 bg-white';
+
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = file.name;
+                img.className = 'h-32 w-full object-cover';
+
+                const caption = document.createElement('p');
+                caption.className =
+                    'truncate p-2 text-xs text-slate-500';
+                caption.textContent = file.name;
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(caption);
+
+                imagesContainer.appendChild(wrapper);
+
+            });
+
+        });
+
+    }
+
+
+    // MULTIPLE VIDEO PREVIEW
+    const videosInput = document.getElementById('galleryVideos');
+    const videosContainer = document.getElementById('galleryVideoPreview');
+
+    if (videosInput && videosContainer) {
+
+        videosInput.addEventListener('change', function () {
+
+            clearPreview('videos', videosContainer);
+
+            const files = Array.from(this.files);
+
+            if (files.length > 10) {
+                alert('Maximum 10 videos allowed.');
+                this.value = '';
+                return;
+            }
+
+            files.forEach(function (file) {
+
+                const url = URL.createObjectURL(file);
+                previewUrls.videos.push(url);
+
+                const wrapper = document.createElement('div');
+                wrapper.className =
+                    'overflow-hidden rounded-xl border border-slate-200 bg-white';
+
+                const video = document.createElement('video');
+                video.src = url;
+                video.controls = true;
+                video.preload = 'metadata';
+                video.className =
+                    'aspect-video w-full bg-black object-contain';
+
+                const caption = document.createElement('p');
+                caption.className =
+                    'truncate p-3 text-xs text-slate-500';
+                caption.textContent = file.name;
+
+                wrapper.appendChild(video);
+                wrapper.appendChild(caption);
+
+                videosContainer.appendChild(wrapper);
+
+            });
+
+        });
+
+    }
+
+
+    // PREVENT DOUBLE SUBMISSION
+    const form = document.getElementById('solarItemForm');
+    const submitButton = document.getElementById('solarSubmitButton');
+    const submitText = document.getElementById('solarSubmitText');
+
+    if (form && submitButton) {
+
+        form.addEventListener('submit', function () {
+
+            submitButton.disabled = true;
+
+            if (submitText) {
+                submitText.textContent = 'Saving, please wait...';
+            }
+
+        });
+
+    }
+
+});
+</script>
+
+<?php $__env->stopPush(); ?>
+
 <?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\work1\Bhavik_Solar_Complete_CMS_Laravel\resources\views/admin/solar/form.blade.php ENDPATH**/ ?>

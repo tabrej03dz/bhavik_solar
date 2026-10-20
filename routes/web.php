@@ -195,7 +195,7 @@ Route::middleware('auth')->group(function () {
 
 
     // Bhavik Solar CMS: Services and Projects
-    Route::prefix('dashboard/manage')->name('admin.')->group(function () {
+    Route::prefix('manage')->name('admin.')->group(function () {
         foreach (['services' => \App\Http\Controllers\AdminServiceController::class,
                   'projects' => \App\Http\Controllers\AdminProjectController::class] as $resource => $controller) {
             Route::get($resource, [$controller, 'index'])->name($resource.'.index');
