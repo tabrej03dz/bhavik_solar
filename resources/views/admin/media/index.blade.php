@@ -45,6 +45,11 @@
         </div>
     @endif
 
+    <div class="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-900">
+        Uploaded images and videos appear automatically on the public detail page.
+        <a class="font-bold underline" target="_blank" rel="noopener" href="{{ $type === 'product' ? route('solar.product.show', $item->slug) : route('solar.project.show', $item->slug) }}">View public page ↗</a>
+    </div>
+
     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
 
         <h2 class="mb-6 text-xl font-extrabold">

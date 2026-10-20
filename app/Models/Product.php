@@ -207,6 +207,13 @@ class Product extends Model
         );
     }
 
+    public function media(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(SolarMedia::class, 'mediable')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
     public function images()
     {
         return $this->hasMany(ProductImage::class)

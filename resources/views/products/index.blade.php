@@ -279,9 +279,9 @@
                         Status
                     </th>
 
-                    <th class="px-5 py-3">
+                    {{-- <th class="px-5 py-3">
                         QR Code
-                    </th>
+                    </th> --}}
 
                     <th class="px-5 py-3 text-right">
                         Actions
@@ -525,7 +525,7 @@
                         </form>
 
                     </td>
-                    <td class="px-5 py-4">
+                    {{-- <td class="px-5 py-4">
 
                         @if($product->qr_code_url)
 
@@ -555,7 +555,7 @@
 
                         @endif
 
-                    </td>
+                    </td> --}}
 
 
                     {{-- ACTIONS --}}

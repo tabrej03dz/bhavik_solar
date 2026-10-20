@@ -283,7 +283,7 @@ Route::get(
 */
 
 Route::middleware('auth')
-    ->prefix('dashboard/manage/media')
+    ->prefix('manage/media')
     ->name('admin.media.')
     ->group(function () {
 

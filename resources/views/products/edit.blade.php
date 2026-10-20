@@ -4,6 +4,13 @@
 @section('page-title', 'Edit Product')
 
 @section('content')
+<div class="mx-auto max-w-7xl px-4 pt-4">
+    <a href="{{ route('admin.media.index', ['type' => 'product', 'id' => $product->id]) }}"
+       class="inline-flex rounded-xl bg-emerald-800 px-6 py-3 font-bold text-white hover:bg-emerald-900">
+        Manage Product Images &amp; Videos
+    </a>
+</div>
+
 
 <div class="mx-auto max-w-6xl">
 

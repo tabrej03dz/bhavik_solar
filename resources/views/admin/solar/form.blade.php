@@ -48,6 +48,13 @@
     </div>
 
 
+    @if($isProject && $item->exists)
+        <a href="{{ route('admin.media.index', ['type' => 'project', 'id' => $item->id]) }}"
+           class="inline-flex rounded-xl bg-emerald-800 px-6 py-3 font-bold text-white hover:bg-emerald-900">
+            Open Project Media Manager (Images &amp; Videos)
+        </a>
+    @endif
+
     {{-- SUCCESS MESSAGE --}}
     @if(session('success'))
 
