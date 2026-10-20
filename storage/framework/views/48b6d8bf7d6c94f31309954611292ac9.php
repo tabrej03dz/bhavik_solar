@@ -280,9 +280,7 @@
                         Status
                     </th>
 
-                    <th class="px-5 py-3">
-                        QR Code
-                    </th>
+                    
 
                     <th class="px-5 py-3 text-right">
                         Actions
@@ -531,37 +529,7 @@
                         </form>
 
                     </td>
-                    <td class="px-5 py-4">
-
-                        <?php if($product->qr_code_url): ?>
-
-                            <div class="flex flex-col items-center gap-2">
-
-                                <img
-                                    src="<?php echo e($product->qr_code_url); ?>"
-                                    alt="QR Code"
-                                    class="h-20 w-20 rounded border bg-white p-1"
-                                >
-
-                                <a
-                                    href="<?php echo e($product->qr_code_url); ?>"
-                                    download="product-<?php echo e($product->id); ?>-qr.svg"
-                                    class="text-xs font-semibold text-green-700 underline"
-                                >
-                                    Download QR
-                                </a>
-
-                            </div>
-
-                        <?php else: ?>
-
-                            <span class="text-xs text-gray-400">
-                                Not Generated
-                            </span>
-
-                        <?php endif; ?>
-
-                    </td>
+                    
 
 
                     

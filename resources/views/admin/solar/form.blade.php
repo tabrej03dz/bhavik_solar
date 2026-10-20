@@ -1,803 +1,245 @@
-
 @extends('layouts.admin')
-
 @section('title', ($item->exists ? 'Edit ' : 'Add ') . ucfirst(rtrim($type, 's')))
-
 @section('page-title', ($item->exists ? 'Edit ' : 'Add ') . ucfirst(rtrim($type, 's')))
 
 @section('content')
-
 @php
     $isProject = $type === 'projects';
-
-    $formAction = $item->exists
+    $pageTitle = ($item->exists ? 'Edit ' : 'Add New ') . ucfirst(rtrim($type, 's'));
+    $action = $item->exists
         ? route('admin.' . $type . '.update', $item->id)
         : route('admin.' . $type . '.store');
-
-    $mediaItems = $isProject && $item->exists
-        ? $item->media
-        : collect();
-
-    $galleryImages = $mediaItems->where('type', 'image');
-    $galleryVideos = $mediaItems->where('type', 'video');
+    $existingMedia = ($isProject && $item->exists) ? $item->media : collect();
 @endphp
 
-<div class="mx-auto max-w-6xl space-y-6">
-
-    {{-- HEADER --}}
-    <div class="flex flex-wrap items-center justify-between gap-4">
-
+<div class="mx-auto max-w-6xl">
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="text-2xl font-black text-slate-900 md:text-3xl">
-                {{ $item->exists ? 'Edit' : 'Add New' }}
-                {{ ucfirst(rtrim($type, 's')) }}
-            </h1>
-
-            <p class="mt-2 text-sm text-slate-500">
-                Manage information, images and videos.
-            </p>
+            <h2 class="text-xl font-extrabold text-slate-950">{{ $pageTitle }}</h2>
+            <p class="mt-1 text-sm text-slate-500">Manage project details, photos and videos in one place.</p>
         </div>
-
-        <a
-            href="{{ route('admin.' . $type . '.index') }}"
-            class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"
-        >
-            ← Back to List
-        </a>
-
+        <a href="{{ route('admin.' . $type . '.index') }}" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50">← Back</a>
     </div>
 
-
-    @if($isProject && $item->exists)
-        <a href="{{ route('admin.media.index', ['type' => 'project', 'id' => $item->id]) }}"
-           class="inline-flex rounded-xl bg-emerald-800 px-6 py-3 font-bold text-white hover:bg-emerald-900">
-            Open Project Media Manager (Images &amp; Videos)
-        </a>
-    @endif
-
-    {{-- SUCCESS MESSAGE --}}
     @if(session('success'))
-
-        <div class="rounded-xl border border-green-200 bg-green-50 p-4 font-semibold text-green-700">
-            {{ session('success') }}
-        </div>
-
+        <div class="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">{{ session('success') }}</div>
     @endif
-
-
-    {{-- VALIDATION ERRORS --}}
     @if($errors->any())
-
-        <div class="rounded-xl border border-red-200 bg-red-50 p-5 text-red-700">
-
-            <h3 class="mb-3 font-bold">
-                Please fix the following errors:
-            </h3>
-
-            <ul class="list-inside list-disc space-y-1 text-sm">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-
+        <div class="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
+            <strong>Please fix these errors:</strong>
+            <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
         </div>
-
     @endif
 
-
-    <form
-        method="POST"
-        enctype="multipart/form-data"
-        action="{{ $formAction }}"
-        id="solarItemForm"
-        class="space-y-6"
-    >
-
+    <form id="solarItemForm" action="{{ $action }}" method="POST" enctype="multipart/form-data">
         @csrf
+        @if($item->exists) @method('PUT') @endif
 
-        @if($item->exists)
-            @method('PUT')
-        @endif
+        <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+            {{-- Left column: same structure as product create form --}}
+            <div class="space-y-6">
+                <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                    <h3 class="font-extrabold text-slate-900">Basic Information</h3>
+                    <div class="mt-5 grid gap-5 sm:grid-cols-2">
+                        <div class="sm:col-span-2">
+                            <label for="title" class="mb-2 block text-sm font-bold text-slate-700">Title <span class="text-rose-500">*</span></label>
+                            <input id="title" type="text" name="title" maxlength="255" required value="{{ old('title', $item->title) }}" placeholder="Enter project title" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="short_description" class="mb-2 block text-sm font-bold text-slate-700">Short Description</label>
+                            <textarea id="short_description" name="short_description" rows="3" maxlength="500" placeholder="Brief project introduction" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500">{{ old('short_description', $item->short_description) }}</textarea>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="description" class="mb-2 block text-sm font-bold text-slate-700">Full Description</label>
+                            <textarea id="description" name="description" rows="7" placeholder="Project details, highlights..." class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500">{{ old('description', $item->description) }}</textarea>
+                        </div>
+                        @if($isProject)
+                            <div>
+                                <label for="location" class="mb-2 block text-sm font-bold text-slate-700">Project Location</label>
+                                <input id="location" type="text" name="location" value="{{ old('location', $item->location) }}" placeholder="e.g. Jharsuguda, Odisha" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="capacity" class="mb-2 block text-sm font-bold text-slate-700">Capacity</label>
+                                <input id="capacity" type="text" name="capacity" value="{{ old('capacity', $item->capacity) }}" placeholder="e.g. 50 kW" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="completed_at" class="mb-2 block text-sm font-bold text-slate-700">Completion Date</label>
+                                <input id="completed_at" type="date" name="completed_at" value="{{ old('completed_at', $item->completed_at?->format('Y-m-d')) }}" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                            </div>
+                        @endif
+                    </div>
+                </section>
 
-
-        {{-- BASIC INFORMATION --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-
-            <h2 class="mb-6 text-xl font-extrabold text-slate-900">
-                Basic Information
-            </h2>
-
-            <div class="grid gap-6 md:grid-cols-2">
-
-                {{-- TITLE --}}
-                <div class="md:col-span-2">
-
-                    <label class="mb-2 block text-sm font-bold text-slate-700">
-                        Title <span class="text-red-500">*</span>
-                    </label>
-
-                    <input
-                        type="text"
-                        name="title"
-                        required
-                        maxlength="255"
-                        value="{{ old('title', $item->title) }}"
-                        placeholder="Enter title"
-                        class="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                    >
-
-                </div>
-
-
-                {{-- SHORT DESCRIPTION --}}
-                <div class="md:col-span-2">
-
-                    <label class="mb-2 block text-sm font-bold text-slate-700">
-                        Short Description
-                    </label>
-
-                    <textarea
-                        name="short_description"
-                        rows="3"
-                        maxlength="500"
-                        placeholder="Enter short description"
-                        class="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                    >{{ old('short_description', $item->short_description) }}</textarea>
-
-                </div>
-
-
-                {{-- FULL DESCRIPTION --}}
-                <div class="md:col-span-2">
-
-                    <label class="mb-2 block text-sm font-bold text-slate-700">
-                        Full Description
-                    </label>
-
-                    <textarea
-                        name="description"
-                        rows="7"
-                        placeholder="Enter full description"
-                        class="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                    >{{ old('description', $item->description) }}</textarea>
-
-                </div>
-
-
-                {{-- PROJECT SPECIFIC FIELDS --}}
                 @if($isProject)
-
-                    <div>
-
-                        <label class="mb-2 block text-sm font-bold text-slate-700">
-                            Project Location
-                        </label>
-
-                        <input
-                            type="text"
-                            name="location"
-                            value="{{ old('location', $item->location) }}"
-                            placeholder="Jharsuguda, Odisha"
-                            class="w-full rounded-xl border border-slate-200 px-4 py-3"
-                        >
-
-                    </div>
-
-
-                    <div>
-
-                        <label class="mb-2 block text-sm font-bold text-slate-700">
-                            Capacity
-                        </label>
-
-                        <input
-                            type="text"
-                            name="capacity"
-                            value="{{ old('capacity', $item->capacity) }}"
-                            placeholder="e.g. 50 kW"
-                            class="w-full rounded-xl border border-slate-200 px-4 py-3"
-                        >
-
-                    </div>
-
-
-                    <div>
-
-                        <label class="mb-2 block text-sm font-bold text-slate-700">
-                            Completion Date
-                        </label>
-
-                        <input
-                            type="date"
-                            name="completed_at"
-                            value="{{ old('completed_at', $item->completed_at?->format('Y-m-d')) }}"
-                            class="w-full rounded-xl border border-slate-200 px-4 py-3"
-                        >
-
-                    </div>
-
-                @endif
-
-
-                {{-- SORT ORDER --}}
-                <div>
-
-                    <label class="mb-2 block text-sm font-bold text-slate-700">
-                        Display Order
-                    </label>
-
-                    <input
-                        type="number"
-                        min="0"
-                        name="sort_order"
-                        value="{{ old('sort_order', $item->sort_order ?? 0) }}"
-                        class="w-full rounded-xl border border-slate-200 px-4 py-3"
-                    >
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        {{-- MAIN IMAGE --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-
-            <h2 class="mb-2 text-xl font-extrabold text-slate-900">
-                Main / Featured Image
-            </h2>
-
-            <p class="mb-6 text-sm text-slate-500">
-                This image is used as the main thumbnail in listing cards.
-            </p>
-
-
-            <input
-                type="file"
-                name="image"
-                id="mainImageInput"
-                accept=".jpg,.jpeg,.png,.webp"
-                class="w-full rounded-xl border border-dashed border-slate-300 p-4"
-            >
-
-            <p class="mt-2 text-xs text-slate-500">
-                JPG, JPEG, PNG, WebP. Maximum 5 MB.
-            </p>
-
-
-            <div id="mainImagePreview" class="mt-5 hidden">
-
-                <img
-                    id="mainImagePreviewImg"
-                    src=""
-                    alt="Image preview"
-                    class="h-48 max-w-full rounded-xl border object-contain"
-                >
-
-            </div>
-
-
-            @if($item->exists && $item->image)
-
-                <div class="mt-6">
-
-                    <p class="mb-3 text-sm font-bold text-slate-700">
-                        Current Main Image
-                    </p>
-
-                    <img
-                        src="{{ asset('storage/' . $item->image) }}"
-                        alt="Current image"
-                        class="h-44 max-w-full rounded-xl border object-contain"
-                    >
-
-                    <label class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-red-600">
-
-                        <input
-                            type="checkbox"
-                            name="remove_image"
-                            value="1"
-                            class="h-4 w-4 rounded"
-                        >
-
-                        Remove Current Main Image
-
-                    </label>
-
-                </div>
-
-            @endif
-
-        </div>
-
-
-        {{-- PROJECT MULTIPLE IMAGES --}}
-        @if($isProject)
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-
-                <div class="mb-6 flex items-center gap-3">
-
-                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-                        <i data-lucide="images" class="h-6 w-6"></i>
-                    </div>
-
-                    <div>
-                        <h2 class="text-xl font-extrabold text-slate-900">
-                            Project Gallery Images
-                        </h2>
-
-                        <p class="text-sm text-slate-500">
-                            Upload multiple installation photographs.
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <label
-                    for="galleryImages"
-                    class="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 px-6 py-10 text-center transition hover:border-emerald-500 hover:bg-emerald-50"
-                >
-
-                    <i data-lucide="image-plus" class="mb-4 h-10 w-10 text-emerald-600"></i>
-
-                    <span class="font-bold text-emerald-800">
-                        Click to Select Multiple Images
-                    </span>
-
-                    <span class="mt-2 text-xs text-slate-500">
-                        Up to 20 images • Maximum 10 MB each
-                    </span>
-
-                </label>
-
-
-                <input
-                    type="file"
-                    name="images[]"
-                    id="galleryImages"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    multiple
-                    class="sr-only"
-                >
-
-
-                <div
-                    id="galleryImagePreview"
-                    class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
-                ></div>
-
-
-                {{-- EXISTING IMAGES --}}
-                @if($item->exists && $galleryImages->isNotEmpty())
-
-                    <div class="mt-8 border-t border-slate-100 pt-7">
-
-                        <h3 class="mb-5 text-lg font-extrabold text-slate-900">
-                            Existing Gallery Images
-                            ({{ $galleryImages->count() }})
-                        </h3>
-
-                        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-
-                            @foreach($galleryImages as $media)
-
-                                <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-
-                                    <img
-                                        src="{{ $media->url }}"
-                                        alt="{{ $media->alt_text ?: $item->title }}"
-                                        loading="lazy"
-                                        class="h-36 w-full object-cover"
-                                    >
-
-                                    <div class="p-3">
-
-                                        <label class="flex items-center gap-2 text-xs font-bold text-red-600">
-
-                                            <input
-                                                type="checkbox"
-                                                name="delete_media[]"
-                                                value="{{ $media->id }}"
-                                                class="h-4 w-4"
-                                            >
-
-                                            Delete on Save
-
-                                        </label>
-
-                                    </div>
-
-                                </div>
-
-                            @endforeach
-
+                    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <h3 class="font-extrabold text-slate-900">Project Gallery</h3>
+                                <p class="mt-1 text-xs text-slate-500">Images and videos in the same gallery, just like product create.</p>
+                            </div>
+                            @if($item->exists)
+                                <a href="{{ route('admin.media.index', ['type' => 'project', 'id' => $item->id]) }}" class="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100">Media Manager ↗</a>
+                            @endif
                         </div>
 
-                    </div>
+                        <label for="mixedMediaInput" class="mt-5 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 px-5 py-9 text-center transition hover:border-emerald-400 hover:bg-emerald-50">
+                            <svg class="h-11 w-11 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m3 17 6-5 4 4 3-3 5 4"/><path d="m15 7 3 2-3 2z"/></svg>
+                            <span class="mt-3 text-sm font-bold text-slate-700">Select Multiple Images & Videos</span>
+                            <span class="mt-1 text-xs text-slate-500">JPG, PNG, WebP, MP4, MOV, WebM • 30 files max • Image 10 MB, Video 50 MB</span>
+                        </label>
+                        <input id="mixedMediaInput" type="file" name="media[]" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.mov,.webm" multiple class="sr-only">
+                        <div id="mediaError" role="alert" class="mt-3 hidden text-sm font-semibold text-rose-600"></div>
+                        <div id="mixedMediaPreview" class="mt-5 hidden grid-cols-2 gap-4 sm:grid-cols-3"></div>
 
-                @endif
-
-            </div>
-
-
-            {{-- PROJECT MULTIPLE VIDEOS --}}
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-
-                <div class="mb-6 flex items-center gap-3">
-
-                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                        <i data-lucide="video" class="h-6 w-6"></i>
-                    </div>
-
-                    <div>
-                        <h2 class="text-xl font-extrabold text-slate-900">
-                            Project Videos
-                        </h2>
-
-                        <p class="text-sm text-slate-500">
-                            Upload multiple project or installation videos.
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <label
-                    for="galleryVideos"
-                    class="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 px-6 py-10 text-center transition hover:border-blue-500 hover:bg-blue-50"
-                >
-
-                    <i data-lucide="video" class="mb-4 h-10 w-10 text-blue-600"></i>
-
-                    <span class="font-bold text-blue-800">
-                        Click to Select Multiple Videos
-                    </span>
-
-                    <span class="mt-2 text-xs text-slate-500">
-                        MP4, MOV, WebM • Up to 10 videos • 50 MB each
-                    </span>
-
-                </label>
-
-
-                <input
-                    type="file"
-                    name="videos[]"
-                    id="galleryVideos"
-                    accept=".mp4,.mov,.webm"
-                    multiple
-                    class="sr-only"
-                >
-
-
-                <div
-                    id="galleryVideoPreview"
-                    class="mt-6 grid gap-4 sm:grid-cols-2"
-                ></div>
-
-
-                {{-- EXISTING VIDEOS --}}
-                @if($item->exists && $galleryVideos->isNotEmpty())
-
-                    <div class="mt-8 border-t border-slate-100 pt-7">
-
-                        <h3 class="mb-5 text-lg font-extrabold text-slate-900">
-                            Existing Videos
-                            ({{ $galleryVideos->count() }})
-                        </h3>
-
-                        <div class="grid gap-5 sm:grid-cols-2">
-
-                            @foreach($galleryVideos as $media)
-
-                                <div class="overflow-hidden rounded-xl border border-slate-200">
-
-                                    <video
-                                        controls
-                                        preload="metadata"
-                                        playsinline
-                                        class="aspect-video w-full bg-black object-contain"
-                                    >
-                                        <source src="{{ $media->url }}">
-                                        Your browser does not support video.
-                                    </video>
-
-
-                                    <div class="p-4">
-
-                                        <p class="mb-3 truncate text-xs text-slate-500">
-                                            {{ $media->original_name }}
-                                        </p>
-
-                                        <label class="flex items-center gap-2 text-sm font-bold text-red-600">
-
-                                            <input
-                                                type="checkbox"
-                                                name="delete_media[]"
-                                                value="{{ $media->id }}"
-                                                class="h-4 w-4"
-                                            >
-
-                                            Delete on Save
-
-                                        </label>
-
-                                    </div>
-
+                        @if($item->exists && $existingMedia->isNotEmpty())
+                            <div class="mt-8 border-t border-slate-100 pt-6">
+                                <div class="mb-4 flex items-center justify-between gap-3">
+                                    <h4 class="font-extrabold text-slate-900">Existing Gallery ({{ $existingMedia->count() }})</h4>
+                                    <span class="text-xs text-slate-400">Check Delete and save to remove</span>
                                 </div>
-
-                            @endforeach
-
-                        </div>
-
-                    </div>
-
+                                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                                    @foreach($existingMedia as $media)
+                                        <div class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                                            @if($media->type === 'video')
+                                                <video controls preload="metadata" playsinline class="aspect-video w-full bg-black object-contain"><source src="{{ $media->url }}">Video unsupported</video>
+                                            @else
+                                                <img src="{{ $media->url }}" alt="{{ $media->alt_text ?: $item->title }}" loading="lazy" class="aspect-video w-full object-cover">
+                                            @endif
+                                            <div class="p-3">
+                                                <p class="mb-2 truncate text-xs text-slate-500" title="{{ $media->original_name }}">{{ $media->original_name }}</p>
+                                                <label class="inline-flex cursor-pointer items-center gap-2 text-xs font-bold text-rose-600"><input type="checkbox" name="delete_media[]" value="{{ $media->id }}" class="h-4 w-4 rounded border-slate-300"> Delete on Save</label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </section>
                 @endif
-
             </div>
 
-        @endif
+            {{-- Right column: feature image / settings / save --}}
+            <aside class="space-y-6">
+                <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h3 class="font-extrabold text-slate-900">Feature Image</h3>
+                    <p class="mt-1 text-xs text-slate-500">Main thumbnail for listing cards (optional).</p>
+                    <label for="mainImageInput" class="mt-4 flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50">
+                        <div id="mainPlaceholder" class="p-5 text-center {{ $item->exists && $item->image ? 'hidden' : '' }}">
+                            <svg class="mx-auto h-10 w-10 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16"/><circle cx="8" cy="10" r="2"/><path d="m3 17 6-5 4 4 3-3 5 4"/></svg>
+                            <p class="mt-3 text-sm font-semibold text-slate-500">Upload Feature Image</p>
+                        </div>
+                        <img id="mainPreview" src="{{ $item->exists && $item->image ? asset('storage/' . $item->image) : '' }}" alt="Feature image preview" class="h-full w-full object-cover {{ $item->exists && $item->image ? '' : 'hidden' }}">
+                    </label>
+                    <input id="mainImageInput" type="file" name="image" accept="image/jpeg,image/png,image/webp" class="mt-4 block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:font-bold file:text-emerald-700">
+                    <p class="mt-2 text-xs text-slate-400">JPG, PNG, WebP • up to 5 MB</p>
+                    @if($item->exists && $item->image)
+                        <label class="mt-4 flex items-center gap-2 text-sm font-semibold text-rose-600"><input type="checkbox" name="remove_image" value="1" class="h-4 w-4"> Remove current feature image</label>
+                    @endif
+                </section>
 
+                <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h3 class="font-extrabold text-slate-900">Publishing Settings</h3>
+                    <div class="mt-5 space-y-5">
+                        <div>
+                            <label for="sort_order" class="mb-2 block text-sm font-bold text-slate-700">Sort Order</label>
+                            <input id="sort_order" type="number" name="sort_order" min="0" value="{{ old('sort_order', $item->sort_order ?? 0) }}" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                            <p class="mt-1 text-xs text-slate-400">Smaller numbers appear first.</p>
+                        </div>
+                        <label class="flex cursor-pointer items-start gap-3"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $item->exists ? $item->is_active : true)) class="mt-1 h-4 w-4 accent-emerald-700"><span><span class="block text-sm font-bold text-slate-700">Active / Published</span><span class="text-xs text-slate-400">Show on website.</span></span></label>
+                        <label class="flex cursor-pointer items-start gap-3"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $item->is_featured)) class="mt-1 h-4 w-4 accent-violet-600"><span><span class="block text-sm font-bold text-slate-700">Featured</span><span class="text-xs text-slate-400">Highlight this project.</span></span></label>
+                    </div>
+                </section>
 
-        {{-- STATUS OPTIONS --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-            <h2 class="mb-5 text-lg font-extrabold text-slate-900">
-                Publishing Settings
-            </h2>
-
-            <div class="flex flex-wrap gap-8">
-
-                <label class="inline-flex cursor-pointer items-center gap-3 font-semibold text-slate-700">
-
-                    <input
-                        type="checkbox"
-                        name="is_active"
-                        value="1"
-                        class="h-5 w-5 rounded"
-                        {{ old('is_active', $item->exists ? $item->is_active : true) ? 'checked' : '' }}
-                    >
-
-                    Active / Published
-
-                </label>
-
-
-                <label class="inline-flex cursor-pointer items-center gap-3 font-semibold text-slate-700">
-
-                    <input
-                        type="checkbox"
-                        name="is_featured"
-                        value="1"
-                        class="h-5 w-5 rounded"
-                        {{ old('is_featured', $item->is_featured) ? 'checked' : '' }}
-                    >
-
-                    Featured
-
-                </label>
-
-            </div>
-
+                <button id="solarSubmitButton" type="submit" class="flex w-full items-center justify-center rounded-xl bg-emerald-700 px-5 py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"><span id="solarSubmitText">{{ $item->exists ? 'Update' : 'Save' }} {{ ucfirst(rtrim($type, 's')) }}</span></button>
+            </aside>
         </div>
-
-
-        {{-- SUBMIT BUTTONS --}}
-        <div class="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-            <button
-                type="submit"
-                id="solarSubmitButton"
-                class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-8 py-3.5 font-extrabold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-
-                <i data-lucide="save" class="h-5 w-5"></i>
-
-                <span id="solarSubmitText">
-                    {{ $item->exists ? 'Update' : 'Save' }}
-                    {{ ucfirst(rtrim($type, 's')) }}
-                </span>
-
-            </button>
-
-
-            <a
-                href="{{ route('admin.' . $type . '.index') }}"
-                class="rounded-xl border border-slate-200 bg-white px-8 py-3.5 font-bold text-slate-700 hover:bg-slate-50"
-            >
-                Cancel
-            </a>
-
-        </div>
-
     </form>
-
 </div>
-
 @endsection
 
-
 @push('scripts')
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
-    const previewUrls = {
-        main: [],
-        images: [],
-        videos: []
-    };
-
-    function clearPreview(type, container) {
-
-        previewUrls[type].forEach(function (url) {
-            URL.revokeObjectURL(url);
-        });
-
-        previewUrls[type] = [];
-
-        if (container) {
-            container.innerHTML = '';
-        }
-    }
-
-
-    // MAIN IMAGE PREVIEW
-    const mainInput = document.getElementById('mainImageInput');
-    const mainWrapper = document.getElementById('mainImagePreview');
-    const mainPreview = document.getElementById('mainImagePreviewImg');
-
-    if (mainInput && mainPreview && mainWrapper) {
-
-        mainInput.addEventListener('change', function () {
-
-            previewUrls.main.forEach(function (url) {
-                URL.revokeObjectURL(url);
-            });
-
-            previewUrls.main = [];
-
-            const file = this.files[0];
-
-            if (!file) {
-                mainWrapper.classList.add('hidden');
-                return;
-            }
-
-            const url = URL.createObjectURL(file);
-            previewUrls.main.push(url);
-
-            mainPreview.src = url;
-            mainWrapper.classList.remove('hidden');
-
-        });
-
-    }
-
-
-    // MULTIPLE IMAGE PREVIEW
-    const imagesInput = document.getElementById('galleryImages');
-    const imagesContainer = document.getElementById('galleryImagePreview');
-
-    if (imagesInput && imagesContainer) {
-
-        imagesInput.addEventListener('change', function () {
-
-            clearPreview('images', imagesContainer);
-
-            const files = Array.from(this.files);
-
-            if (files.length > 20) {
-                alert('Maximum 20 images allowed.');
-                this.value = '';
-                return;
-            }
-
-            files.forEach(function (file) {
-
-                const url = URL.createObjectURL(file);
-                previewUrls.images.push(url);
-
-                const wrapper = document.createElement('div');
-                wrapper.className =
-                    'overflow-hidden rounded-xl border border-slate-200 bg-white';
-
-                const img = document.createElement('img');
-                img.src = url;
-                img.alt = file.name;
-                img.className = 'h-32 w-full object-cover';
-
-                const caption = document.createElement('p');
-                caption.className =
-                    'truncate p-2 text-xs text-slate-500';
-                caption.textContent = file.name;
-
-                wrapper.appendChild(img);
-                wrapper.appendChild(caption);
-
-                imagesContainer.appendChild(wrapper);
-
-            });
-
-        });
-
-    }
-
-
-    // MULTIPLE VIDEO PREVIEW
-    const videosInput = document.getElementById('galleryVideos');
-    const videosContainer = document.getElementById('galleryVideoPreview');
-
-    if (videosInput && videosContainer) {
-
-        videosInput.addEventListener('change', function () {
-
-            clearPreview('videos', videosContainer);
-
-            const files = Array.from(this.files);
-
-            if (files.length > 10) {
-                alert('Maximum 10 videos allowed.');
-                this.value = '';
-                return;
-            }
-
-            files.forEach(function (file) {
-
-                const url = URL.createObjectURL(file);
-                previewUrls.videos.push(url);
-
-                const wrapper = document.createElement('div');
-                wrapper.className =
-                    'overflow-hidden rounded-xl border border-slate-200 bg-white';
-
-                const video = document.createElement('video');
-                video.src = url;
-                video.controls = true;
-                video.preload = 'metadata';
-                video.className =
-                    'aspect-video w-full bg-black object-contain';
-
-                const caption = document.createElement('p');
-                caption.className =
-                    'truncate p-3 text-xs text-slate-500';
-                caption.textContent = file.name;
-
-                wrapper.appendChild(video);
-                wrapper.appendChild(caption);
-
-                videosContainer.appendChild(wrapper);
-
-            });
-
-        });
-
-    }
-
-
-    // PREVENT DOUBLE SUBMISSION
+    const main = document.getElementById('mainImageInput');
+    const mainPreview = document.getElementById('mainPreview');
+    const mainPlaceholder = document.getElementById('mainPlaceholder');
+    const mediaInput = document.getElementById('mixedMediaInput');
+    const previewBox = document.getElementById('mixedMediaPreview');
+    const errorBox = document.getElementById('mediaError');
     const form = document.getElementById('solarItemForm');
-    const submitButton = document.getElementById('solarSubmitButton');
+    const submit = document.getElementById('solarSubmitButton');
     const submitText = document.getElementById('solarSubmitText');
+    let mainURL = null;
+    let previewURLs = [];
 
-    if (form && submitButton) {
+    if (main) main.addEventListener('change', function () {
+        if (mainURL) URL.revokeObjectURL(mainURL);
+        const file = this.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024 || !['image/jpeg','image/png','image/webp'].includes(file.type)) {
+            alert('Feature image must be JPG, PNG or WebP (max 5 MB).');
+            this.value = '';
+            return;
+        }
+        mainURL = URL.createObjectURL(file);
+        mainPreview.src = mainURL;
+        mainPreview.classList.remove('hidden');
+        mainPlaceholder.classList.add('hidden');
+    });
 
-        form.addEventListener('submit', function () {
-
-            submitButton.disabled = true;
-
-            if (submitText) {
-                submitText.textContent = 'Saving, please wait...';
-            }
-
+    if (mediaInput) mediaInput.addEventListener('change', function () {
+        previewURLs.forEach(url => URL.revokeObjectURL(url));
+        previewURLs = [];
+        previewBox.replaceChildren();
+        previewBox.classList.add('hidden');
+        previewBox.classList.remove('grid');
+        errorBox.classList.add('hidden');
+        const files = Array.from(this.files);
+        const allowedImages = ['image/jpeg', 'image/png', 'image/webp'];
+        const allowedVideos = ['video/mp4', 'video/quicktime', 'video/webm'];
+        let error = '';
+        if (files.length > 30) error = 'Maximum 30 files allowed at once.';
+        for (const file of files) {
+            const isImage = allowedImages.includes(file.type);
+            const isVideo = allowedVideos.includes(file.type);
+            if (!isImage && !isVideo) { error = 'Only JPG, PNG, WebP, MP4, MOV and WebM are allowed.'; break; }
+            if (isImage && file.size > 10 * 1024 * 1024) { error = 'Images must be 10 MB or smaller.'; break; }
+            if (isVideo && file.size > 50 * 1024 * 1024) { error = 'Videos must be 50 MB or smaller.'; break; }
+        }
+        if (error) {
+            this.value = '';
+            errorBox.textContent = error;
+            errorBox.classList.remove('hidden');
+            return;
+        }
+        if (!files.length) return;
+        previewBox.classList.remove('hidden');
+        previewBox.classList.add('grid');
+        files.forEach(file => {
+            const url = URL.createObjectURL(file);
+            previewURLs.push(url);
+            const card = document.createElement('div');
+            card.className = 'overflow-hidden rounded-xl border border-slate-200 bg-white';
+            const media = document.createElement(allowedImages.includes(file.type) ? 'img' : 'video');
+            media.src = url;
+            media.className = 'aspect-video w-full object-cover bg-slate-100';
+            if (media.tagName === 'VIDEO') { media.controls = true; media.preload = 'metadata'; }
+            const caption = document.createElement('div');
+            caption.className = 'truncate p-3 text-xs text-slate-500';
+            caption.textContent = file.name;
+            card.append(media, caption);
+            previewBox.appendChild(card);
         });
+    });
 
-    }
-
+    if (form) form.addEventListener('submit', function () {
+        submit.disabled = true;
+        submitText.textContent = 'Saving...';
+    });
+    window.addEventListener('beforeunload', () => {
+        previewURLs.forEach(url => URL.revokeObjectURL(url));
+        if (mainURL) URL.revokeObjectURL(mainURL);
+    });
 });
 </script>
-
 @endpush
