@@ -6,17 +6,37 @@
 @section('content')
 
 @php
-    $imageUrl = function ($path) {
-        if (!$path) return null;
-
-        if (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
-            return $path;
+    // Convert stored paths into public storage URLs using the same method
+    // as the working service images: asset('storage/...').
+    $mediaUrl = function ($path) {
+        if (!$path) {
+            return null;
         }
 
-        return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+        $path = trim((string) $path);
+
+        // Keep genuine external media URLs intact.
+        if (preg_match('~^https?://~i', $path)) {
+            $host = parse_url($path, PHP_URL_HOST);
+            // Older local development URLs should not be used on production.
+            if (!in_array(strtolower($host ?? ''), ['localhost', '127.0.0.1'], true)) {
+                return $path;
+            }
+            $path = parse_url($path, PHP_URL_PATH) ?: '';
+        }
+
+        $path = ltrim($path, '/');
+        if (str_starts_with($path, 'public/')) {
+            $path = substr($path, strlen('public/'));
+        }
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, strlen('storage/'));
+        }
+
+        return asset('storage/' . $path);
     };
 
-    $mainImage = $imageUrl($item->image ?? null);
+    $mainImage = $mediaUrl($item->image ?? null);
 
     $backRoute = match ($type) {
         'product' => route('product'),
@@ -29,13 +49,21 @@
     $imageGallery = collect($media)
         ->where('type', 'image')
         ->map(fn($file) => [
-            'url' => $file->url,
+            'url' => $mediaUrl($file->file_path),
             'alt' => $file->alt_text ?: $title,
         ])
         ->values();
 
     foreach ($legacyImages as $image) {
-        $imageGallery->push($image);
+        $legacyPath = is_array($image)
+            ? ($image['url'] ?? $image['file_path'] ?? $image['path'] ?? null)
+            : (is_object($image) ? ($image->file_path ?? $image->url ?? null) : $image);
+        if ($legacyPath) {
+            $imageGallery->push([
+                'url' => $mediaUrl($legacyPath),
+                'alt' => is_array($image) ? ($image['alt'] ?? $title) : $title,
+            ]);
+        }
     }
 
     if ($mainImage) {
@@ -131,7 +159,7 @@
                                         preload="metadata"
                                         class="aspect-video w-full bg-black object-contain"
                                     >
-                                        <source src="{{ $video->url }}">
+                                        <source src="{{ $mediaUrl($video->file_path) }}">
                                         Your browser does not support video playback.
                                     </video>
                                 </div>
@@ -256,7 +284,7 @@
 
                             @if($relatedItem->image)
                                 <img
-                                    src="{{ $imageUrl($relatedItem->image) }}"
+                                    src="{{ $mediaUrl($relatedItem->image) }}"
                                     alt="{{ $relatedTitle }}"
                                     loading="lazy"
                                     class="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"

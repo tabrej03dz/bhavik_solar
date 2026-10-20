@@ -2,6 +2,31 @@
 
 <?php $__env->startSection('content'); ?>
 
+<?php
+    // Use the same working URL method as the Services images.
+    // Prefer database file paths over image_url accessors that may contain localhost.
+    $homeMediaUrl = function ($path) {
+        if (empty($path)) return null;
+
+        $path = trim((string) $path);
+        $urlParts = parse_url($path);
+
+        // Keep genuinely external images; rewrite stale local development URLs.
+        if (preg_match('~^https?://~i', $path)) {
+            $host = strtolower($urlParts['host'] ?? '');
+            if (!in_array($host, ['localhost', '127.0.0.1', '0.0.0.0', '::1'], true)) {
+                return $path;
+            }
+            $path = $urlParts['path'] ?? '';
+        }
+
+        $path = ltrim($path, '/');
+        $path = preg_replace('~^(?:public/|storage/)+~i', '', $path);
+        return $path !== '' ? asset('storage/' . $path) : null;
+    };
+?>
+
+
 
 <section class="relative min-h-[690px] overflow-hidden bg-[#06291f] text-white lg:min-h-[760px]">
 
@@ -280,26 +305,8 @@
             <?php $__empty_1 = true; $__currentLoopData = $services; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $service): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
 
                 <?php
-                    $serviceName = $service->title
-                        ?: ($service->name ?: 'Solar Service');
-
-                    $serviceImage = $service->image_url
-                        ?: ($service->image ?: null);
-
-                    $serviceImage = $serviceImage
-                        ? (
-                            preg_match('~^https?://~i', $serviceImage)
-                                ? $serviceImage
-                                : asset(
-                                    ltrim(
-                                        str_starts_with($serviceImage, 'storage/')
-                                            ? $serviceImage
-                                            : 'storage/'.$serviceImage,
-                                        '/'
-                                    )
-                                )
-                        )
-                        : null;
+                    $serviceName = $service->title ?: ($service->name ?: 'Solar Service');
+                    $serviceImage = $homeMediaUrl($service->image ?: ($service->image_url ?? null));
                 ?>
 
                 <article class="group flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-8 transition hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-900/10">
@@ -425,27 +432,10 @@
             <?php $__empty_1 = true; $__currentLoopData = $projects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $project): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
 
                 <?php
-                    $projectTitle = $project->title
-                        ?: ($project->name ?: 'Solar Project');
-
-                    $projectImage = $project->image_url
-                        ?: ($project->image
-                        ?: ($project->featured_image ?: null));
-
-                    $projectImage = $projectImage
-                        ? (
-                            preg_match('~^https?://~i', $projectImage)
-                                ? $projectImage
-                                : asset(
-                                    ltrim(
-                                        str_starts_with($projectImage, 'storage/')
-                                            ? $projectImage
-                                            : 'storage/'.$projectImage,
-                                        '/'
-                                    )
-                                )
-                        )
-                        : asset('bhavik/assets/project-jharsuguda.jpg');
+                    $projectTitle = $project->title ?: ($project->name ?: 'Solar Project');
+                    $projectImage = $homeMediaUrl(
+                        $project->image ?: ($project->featured_image ?: ($project->image_url ?? null))
+                    ) ?: asset('bhavik/assets/project-jharsuguda.jpg');
                 ?>
 
                 <article class="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition hover:shadow-xl">
@@ -573,27 +563,10 @@
             <?php $__empty_1 = true; $__currentLoopData = $products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
 
                 <?php
-                    $productName = $product->name
-                        ?: ($product->title ?: 'Solar Product');
-
-                    $productImage = $product->image_url
-                        ?: ($product->image
-                        ?: ($product->featured_image ?: null));
-
-                    $productImage = $productImage
-                        ? (
-                            preg_match('~^https?://~i', $productImage)
-                                ? $productImage
-                                : asset(
-                                    ltrim(
-                                        str_starts_with($productImage, 'storage/')
-                                            ? $productImage
-                                            : 'storage/'.$productImage,
-                                        '/'
-                                    )
-                                )
-                        )
-                        : null;
+                    $productName = $product->name ?: ($product->title ?: 'Solar Product');
+                    $productImage = $homeMediaUrl(
+                        $product->image ?: ($product->featured_image ?: ($product->image_url ?? null))
+                    );
                 ?>
 
                 <article class="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition hover:shadow-xl">
@@ -791,17 +764,7 @@
                             $rating = max(1, min(5, (int) ($testimonial->rating ?? 5)));
                             $photo = $testimonial->image;
 
-                            $photoUrl = $photo
-                                ? (
-                                    preg_match('~^https?://~i', $photo)
-                                        ? $photo
-                                        : (
-                                            str_starts_with($photo, 'storage/')
-                                                ? asset($photo)
-                                                : \Illuminate\Support\Facades\Storage::disk('public')->url($photo)
-                                        )
-                                )
-                                : null;
+                            $photoUrl = $homeMediaUrl($photo);
                         ?>
 
                         <article
