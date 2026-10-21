@@ -5,6 +5,33 @@
 
 <?php $__env->startSection('content'); ?>
 
+<?php
+    // Match the working image URL strategy on the home page.
+    // DB paths take precedence over image_url accessors that can retain localhost.
+    $productMediaUrl = function ($path) {
+        if (empty($path)) return null;
+
+        $path = trim((string) $path);
+        if ($path === '') return null;
+
+        if (preg_match('~^https?://~i', $path)) {
+            $parts = parse_url($path);
+            $host = strtolower($parts['host'] ?? '');
+
+            if (!in_array($host, ['localhost', '127.0.0.1', '0.0.0.0', '::1'], true)) {
+                return $path;
+            }
+
+            $path = $parts['path'] ?? '';
+        }
+
+        $path = ltrim($path, '/');
+        $path = preg_replace('~^(?:public/|storage/)+~i', '', $path);
+
+        return $path !== '' ? asset('storage/' . $path) : null;
+    };
+?>
+
 
 <section class="relative overflow-hidden bg-[#062d24] text-white">
 
@@ -261,10 +288,11 @@
                         <div class="relative h-64 overflow-hidden bg-[#eef5f0]">
 
                             <?php
-                                $productImage = $product->image_url
-                                    ?? (!empty($product->image)
-                                        ? asset('storage/' . $product->image)
-                                        : null);
+                                $productImage = $productMediaUrl(
+                                    $product->image
+                                        ?: ($product->featured_image
+                                            ?: ($product->image_url ?? null))
+                                );
                             ?>
 
                             <?php if($productImage): ?>
@@ -395,11 +423,11 @@
 
 
                             
-                            <div class="mt-auto grid grid-cols-2 gap-3 pt-6">
+                            <div class="mt-auto grid grid-cols-2 gap-2.5 pt-6">
 
                                 <a
                                     href="<?php echo e(route('contact', ['product' => $product->name])); ?>"
-                                    class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 px-3 py-3 text-xs font-extrabold text-emerald-800 transition hover:bg-emerald-50"
+                                    class="inline-flex min-h-12 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-emerald-300 px-2 py-3 text-center text-xs font-extrabold text-emerald-800 transition hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
                                 >
 
                                     Get Quote
@@ -408,22 +436,24 @@
 
                                 </a>
 
-                                <a href="<?php echo e(route('solar.product.show', $product->slug)); ?>"
-                                class="inline-flex rounded-xl bg-emerald-700 px-5 py-3 font-bold text-white">
-                                    Details →
+                                <a
+                                    href="<?php echo e($whatsappUrl); ?>"
+                                    class="inline-flex min-h-12 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-emerald-300 px-2 py-3 text-center text-xs font-extrabold text-emerald-800 transition hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
+                                >
+                                    <span>Enquire Now</span>
+                                    <i data-lucide="message-circle" class="h-4 w-4"></i>
                                 </a>
 
 
                                 <a
-                                    href="<?php echo e($whatsappUrl); ?>"
+                                    href="<?php echo e(route('solar.product.show', $product->slug)); ?>"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-3 text-xs font-extrabold text-white transition hover:bg-emerald-900"
+                                    class="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-3 text-sm font-extrabold text-white transition hover:bg-emerald-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
                                 >
 
-                                    Enquire Now
-
-                                    <i data-lucide="message-circle" class="h-4 w-4"></i>
+                                    Details
+                                    <i data-lucide="arrow-right" class="h-4 w-4 shrink-0"></i>
 
                                 </a>
 

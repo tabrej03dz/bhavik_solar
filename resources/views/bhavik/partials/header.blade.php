@@ -33,7 +33,7 @@
     <nav class="flex flex-col gap-1">
         <a href="{{ url("/") }}" class="rounded-lg py-3 px-4 hover:bg-white/10">Home</a>
         <a href="{{ url("/about") }}" class="rounded-lg py-3 px-4 hover:bg-white/10">About Us</a>
-        <a href="{{ url("/products") }}" class="rounded-lg py-3 px-4 hover:bg-white/10">Products</a>
+        <a href="{{ url("/product") }}" class="rounded-lg py-3 px-4 hover:bg-white/10">Products</a>
         <a href="{{ url("/services") }}" class="rounded-lg py-3 px-4 hover:bg-white/10">Services</a>
         <a href="{{ url("/projects") }}" class="rounded-lg py-3 px-4 hover:bg-white/10">Projects</a>
         <a href="{{ url("/contact") }}" class="rounded-lg py-3 px-4 hover:bg-white/10">Contact</a>
