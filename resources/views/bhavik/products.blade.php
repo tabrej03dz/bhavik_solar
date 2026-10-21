@@ -438,7 +438,7 @@
                                 </a>
 
                                 <a
-                                    href="{{ $whatsappUrl }}"
+                                    href="{{ $whatsappUrl }}" target="_blank"
                                     class="inline-flex min-h-12 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-emerald-300 px-2 py-3 text-center text-xs font-extrabold text-emerald-800 transition hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
                                 >
                                     <span>Enquire Now</span>
@@ -448,7 +448,7 @@
 
                                 <a
                                     href="{{ route('solar.product.show', $product->slug) }}"
-                                    target="_blank"
+                                    
                                     rel="noopener noreferrer"
                                     class="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-3 text-sm font-extrabold text-white transition hover:bg-emerald-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
                                 >
